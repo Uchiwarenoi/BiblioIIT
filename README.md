@@ -67,6 +67,3 @@ Pour le quitter : `deactivate`. Aux lancements suivants, il suffit de l'activer 
 - **Retards :** liste les emprunts en cours dont la date de retour est dépassée, avec leur code d'emprunt.
 - **Réglages :** `biblioiit/config.py` permet de choisir le nombre de livres récupérés en ligne (5, 10, 20...), les périodes d'emprunt proposées et le délai d'attente du site.
 
-## Branches (travail d'équipe)
-
-`feature/regles` (A), `feature/modeles` (B), `feature/base` (C), `feature/service` (D), `feature/menu` (E).
