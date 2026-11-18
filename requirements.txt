@@ -1,0 +1,4 @@
+# BiblioIIT n'utilise que la bibliothèque standard de Python (3.8 ou plus récent).
+# Aucune dépendance externe n'est requise pour l'instant.
+# Si tu ajoutes un jour un paquet, écris-le ici (ex. requests==2.32.3),
+# puis relance : python -m pip install -r requirements.txt
