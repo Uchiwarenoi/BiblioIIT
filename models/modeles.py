@@ -12,12 +12,6 @@ class Livre:
 
 
 @dataclass(frozen=True)
-class Etudiant:
-    matricule: str
-    nom: str
-
-
-@dataclass(frozen=True)
 class LivreEnLigne:
     """Titre trouvé sur un catalogue externe, avant son enregistrement en base."""
 
@@ -30,7 +24,6 @@ class LivreEnLigne:
 class Emprunt:
     id: Optional[int]
     code_livre: str
-    matricule: Optional[str]
     date_emprunt: date
     date_retour_prevue: date
     date_retour_effective: Optional[date] = None

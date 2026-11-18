@@ -1,3 +1,5 @@
+"""Règles métier de BiblioIIT (aucune dépendance à la base ni à l'affichage)."""
+
 import re
 import unicodedata
 from datetime import date, timedelta
@@ -6,7 +8,6 @@ from typing import Iterable
 
 DUREE_EMPRUNT_JOURS = 14
 SEUIL_CORRESPONDANCE = 0.7
-_MATRICULE_RE = re.compile(r"^E\d{4}-\d{3}$")
 
 
 class RegleMetierError(Exception):
@@ -36,15 +37,6 @@ def valider_duree_emprunt(duree_jours: int, autorisees: Iterable[int]) -> int:
     if duree_jours not in tuple(autorisees):
         raise RegleMetierError(f"Période d'emprunt invalide : {duree_jours} jours.")
     return duree_jours
-
-
-def valider_matricule(matricule: str) -> str:
-    matricule = matricule.strip().upper()
-    if not _MATRICULE_RE.match(matricule):
-        raise RegleMetierError(
-            f"Matricule invalide : « {matricule} » (format attendu : E2026-001)."
-        )
-    return matricule
 
 
 def valider_code_livre(code: str) -> str:

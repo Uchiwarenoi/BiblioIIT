@@ -18,7 +18,6 @@ class BibliothequeService:
         return self._depot.rechercher_livres(mot_cle)
 
     def rechercher_en_ligne(self, mot_cle: str) -> List[Livre]:
-        """Cherche en ligne et enregistre automatiquement les livres trouvés (code généré)."""
         if self._source is None:
             return []
         try:
@@ -80,7 +79,6 @@ class BibliothequeService:
             id=None,
             code=self._depot.prochain_code_emprunt(),
             code_livre=code,
-            matricule=None,
             date_emprunt=date_emprunt,
             date_retour_prevue=regles.calculer_date_retour(date_emprunt, duree_jours),
         )

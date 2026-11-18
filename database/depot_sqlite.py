@@ -1,11 +1,9 @@
-"""Dépôt SQLite : persistance des livres, étudiants et emprunts."""
-
 import sqlite3
 from datetime import date
 from pathlib import Path
 from typing import List, Optional
 
-from models.modeles import Emprunt, Etudiant, Livre
+from models.modeles import Emprunt, Livre
 from models.regles import normaliser_texte
 
 CHEMIN_PAR_DEFAUT = Path(__file__).resolve().parent / "biblioiit.db"
@@ -14,13 +12,10 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS livres (
     code TEXT PRIMARY KEY, titre TEXT NOT NULL,
     auteur TEXT NOT NULL, annee INTEGER NOT NULL);
-CREATE TABLE IF NOT EXISTS etudiants (
-    matricule TEXT PRIMARY KEY, nom TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS emprunts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code TEXT UNIQUE,
     code_livre TEXT NOT NULL REFERENCES livres(code),
-    matricule TEXT REFERENCES etudiants(matricule),
     date_emprunt TEXT NOT NULL,
     date_retour_prevue TEXT NOT NULL,
     date_retour_effective TEXT);
@@ -41,9 +36,9 @@ class DepotSQLite:
         self._cnx.executescript(_SCHEMA)
         if ancien_schema:
             self._cnx.execute(
-                "INSERT INTO emprunts (id, code, code_livre, matricule, date_emprunt,"
+                "INSERT INTO emprunts (id, code, code_livre, date_emprunt,"
                 " date_retour_prevue, date_retour_effective)"
-                " SELECT id, printf('EMP-%04d', id), code_livre, matricule, date_emprunt,"
+                " SELECT id, printf('EMP-%04d', id), code_livre, date_emprunt,"
                 " date_retour_prevue, date_retour_effective FROM emprunts_ancien"
             )
             self._cnx.execute("DROP TABLE emprunts_ancien")
@@ -57,22 +52,9 @@ class DepotSQLite:
         )
         self._cnx.commit()
 
-    def ajouter_etudiant(self, etudiant: Etudiant) -> None:
-        self._cnx.execute(
-            "INSERT OR IGNORE INTO etudiants VALUES (?, ?)",
-            (etudiant.matricule, etudiant.nom),
-        )
-        self._cnx.commit()
-
     def obtenir_livre(self, code: str) -> Optional[Livre]:
         r = self._cnx.execute("SELECT * FROM livres WHERE code = ?", (code,)).fetchone()
         return Livre(**dict(r)) if r else None
-
-    def obtenir_etudiant(self, matricule: str) -> Optional[Etudiant]:
-        r = self._cnx.execute(
-            "SELECT * FROM etudiants WHERE matricule = ?", (matricule,)
-        ).fetchone()
-        return Etudiant(**dict(r)) if r else None
 
     def rechercher_livres(self, mot_cle: str) -> List[Livre]:
         cle = normaliser_texte(mot_cle)
@@ -106,7 +88,6 @@ class DepotSQLite:
             id=r["id"],
             code=r["code"],
             code_livre=r["code_livre"],
-            matricule=r["matricule"],
             date_emprunt=date.fromisoformat(r["date_emprunt"]),
             date_retour_prevue=date.fromisoformat(r["date_retour_prevue"]),
             date_retour_effective=date.fromisoformat(eff) if eff else None,
@@ -132,12 +113,6 @@ class DepotSQLite:
         ).fetchone()
         return self._vers_emprunt(r) if r else None
 
-    def compter_emprunts_en_cours(self, matricule: str) -> int:
-        return self._cnx.execute(
-            "SELECT COUNT(*) FROM emprunts WHERE matricule = ? AND date_retour_effective IS NULL",
-            (matricule,),
-        ).fetchone()[0]
-
     def lister_emprunts_en_cours(self) -> List[Emprunt]:
         lignes = self._cnx.execute(
             "SELECT * FROM emprunts WHERE date_retour_effective IS NULL ORDER BY date_retour_prevue"
@@ -146,9 +121,9 @@ class DepotSQLite:
 
     def enregistrer_emprunt(self, e: Emprunt) -> Emprunt:
         cur = self._cnx.execute(
-            "INSERT INTO emprunts (code, code_livre, matricule, date_emprunt, date_retour_prevue)"
-            " VALUES (?, ?, ?, ?, ?)",
-            (e.code, e.code_livre, e.matricule, e.date_emprunt.isoformat(),
+            "INSERT INTO emprunts (code, code_livre, date_emprunt, date_retour_prevue)"
+            " VALUES (?, ?, ?, ?)",
+            (e.code, e.code_livre, e.date_emprunt.isoformat(),
              e.date_retour_prevue.isoformat()),
         )
         self._cnx.commit()
@@ -175,9 +150,3 @@ def charger_donnees_demo(depot: DepotSQLite) -> None:
         Livre("L004", "Allah n'est pas obligé", "Ahmadou Kourouma", 2000),
     ):
         depot.ajouter_livre(livre)
-    for etu in (
-        Etudiant("E2026-001", "Étudiant 1"),
-        Etudiant("E2026-002", "Étudiant 2"),
-        Etudiant("E2026-003", "Étudiant 3"),
-    ):
-        depot.ajouter_etudiant(etu)
